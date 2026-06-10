@@ -1,0 +1,16 @@
+UTILS FOLDER
+
+A utility is a function that is stateless, reusable, and 
+has no knowledge of your application's domain.
+
+If you could copy a util file into a completely different
+ project (a food delivery app, a banking app) and it would
+  still work without changing a single line — it belongs 
+  in utils/
+
+MODELS FOLDER
+Think of models/ as the folder that answers:
+"What does my data look like?"
+
+utils/   → what your app CAN DO     (functions, helpers, pure logic)
+models/  → what your app KNOWS ABOUT (data structures, shape of objects)`
