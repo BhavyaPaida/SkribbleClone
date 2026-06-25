@@ -21,5 +21,5 @@ const registerDrawHandler = (io,socket) => {
         socket.to(socket.roomCode).emit("clearCanvas")
     })
 }
-""
+
 module.exports = {registerDrawHandler};

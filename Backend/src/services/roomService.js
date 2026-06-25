@@ -34,7 +34,7 @@ const joinRoom = (roomCode, playerId, username)=>{
 
     if(room.status === "playing"){
         const error= new Error("Game already started");
-        errorstatusCode=404;
+        error.statusCode=404;
         throw error;
     }
 
@@ -53,7 +53,7 @@ const leaveRoom = (roomCode, playerId)=>{
     const room = rooms.get(roomCode);
     if(!room) return null;
 
-    room.players.delete(playerID);
+    room.players.delete(playerId);
 
     if(room.players.size === 0){
         rooms.delete(roomCode);
@@ -63,7 +63,7 @@ const leaveRoom = (roomCode, playerId)=>{
     if(room.hostID===playerId){
         const newHost = room.players.values().next().value;
         newHost.isHost=true;
-        room.hostID=newHost.id;
+        room.hostId=newHost.id;
     }
 
     return room.toJSON();
@@ -71,7 +71,7 @@ const leaveRoom = (roomCode, playerId)=>{
 
 const getRoom = (roomCode)=>{
     room=rooms.get(roomCode)
-    return room.toJSON();
+    return room;
 }
 
 module.exports = {createRoom, joinRoom, leaveRoom, getRoom}

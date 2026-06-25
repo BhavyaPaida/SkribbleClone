@@ -5,9 +5,9 @@ const {PORT} = require('./src/config/env')
 
 
 const server= http.createServer(app);
-initSocker(server);
+initSocket(server);
 
 server.listen(PORT, ()=>{
-    console.log('server running on http://localhost: ${PORT}');
+    console.log(`server running on http://localhost: ${PORT}`);
 });
  

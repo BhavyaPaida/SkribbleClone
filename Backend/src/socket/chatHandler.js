@@ -14,6 +14,6 @@ const registerChatHandler = (io, socket) => {
             isCorrect: false,
         })
     })
-
-    module.exports = {registerChatHandler};
 }
+
+module.exports = {registerChatHandler};

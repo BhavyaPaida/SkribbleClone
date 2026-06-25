@@ -2,7 +2,7 @@ const {createRoom, joinRoom} = require('../services/roomService');
 
 const {registerGameHandler} = require('./gameHandler');
 const {registerDrawHandler} = require('./drawHandler');
-const {registerChatHandler} = require('/chatHandler');
+const {registerChatHandler} = require('./chatHandler');
 
 
 const roomHandler = (io, socket) =>{
@@ -10,7 +10,7 @@ const roomHandler = (io, socket) =>{
         try {
             const room = createRoom(socket.id, username, maxPlayers);
 
-            socket.roomcode = room.code;
+            socket.roomCode = room.code;
             socket.username = username;
 
 
@@ -19,7 +19,7 @@ const roomHandler = (io, socket) =>{
 
             socket.join(room.code); 
 
-            socket.emit("roomCreated", room.toJSON());
+            socket.emit("roomCreated", room);
 
             //registering a handle means simply calling socket.on()
 

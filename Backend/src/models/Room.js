@@ -26,9 +26,9 @@ class Room{
         return {
             code: this.code,
             hostId: this.hostId,
-            players: this.getPlayersArray().map(p => p.toJSON()),
+            players: Array.from(this.players.values()).map(p => p.toJSON()),
             maxPlayers: this.maxPlayers,
-            totalRounds: this.totalRounds,
+            maxRounds: this.maxRounds,
             roundTime: this.roundTime,
             status: this.status,
             currentRound: this.currentRound,

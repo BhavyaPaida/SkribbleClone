@@ -9,13 +9,13 @@ class GameService{
     }
 
     startGame(hostId){
-        if(room.hostId !== hostId){
+        if(this.room.hostId !== hostId){
             const error= new Error("Only host can start the game");
             error.statusCode=403;
             throw error;
         }
 
-        if(this.room.players.length<2){
+        if(this.room.players.size<2){
             const error = new Error("Need at least 2 players to start the game");
             error.statusCode = 400;
             throw error;
@@ -113,7 +113,7 @@ class GameService{
     _getTurnData(){
         return{
             room: this.room.toJSON(),
-            word: this.room.currentword,
+            word: this.room.currentWord,
             drawerId: this.room.currentDrawerId,
         };
     }
