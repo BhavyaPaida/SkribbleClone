@@ -9,7 +9,7 @@ const initSocket = (server)=>{  //create a function to receive HTTP server
     });
 
     io.on('connection', (socket)=> {
-        console.log('Player connected: ${socket.id}');
+        console.log(`Player connected: ${socket.id}`);
 
         roomHandler(io, socket);
     });

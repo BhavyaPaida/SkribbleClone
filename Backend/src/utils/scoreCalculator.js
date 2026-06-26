@@ -4,7 +4,7 @@ const DRAWER_POINTS = 50;
 
 const calculateScore = (timeElapsed, totalRoundTime, didGuess) => {
     if(!didGuess) return 0;
-    fraction = timeElapsed / totalRoundTime;
+    const fraction = timeElapsed / totalRoundTime;
     const rawscore = Math.floor(MAX_POINTS * (1 - fraction));
     return Math.max(rawscore, MIN_POINTS);
 }

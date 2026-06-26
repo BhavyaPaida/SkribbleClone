@@ -19,6 +19,7 @@ const createRoom = (hostId, username, maxPlayers)=>{
     const host= new Player(hostId, username);
     host.isHost=true;
     room.players.set(host.id, host);
+    room.departedPlayers = new Set(); // Track players who left to prevent rejoining
     rooms.set(code, room);
     return room.toJSON();
 };
@@ -34,7 +35,7 @@ const joinRoom = (roomCode, playerId, username)=>{
 
     if(room.status === "playing"){
         const error= new Error("Game already started");
-        error.statusCode=404;
+        error.statusCode=400;
         throw error;
     }
 
@@ -44,34 +45,45 @@ const joinRoom = (roomCode, playerId, username)=>{
         throw error;
     }
 
+    if(room.departedPlayers && room.departedPlayers.has(username)){
+        const error= new Error("You cannot rejoin a room you have left.");
+        error.statusCode=403;
+        throw error;
+    }
+
     const player= new Player(playerId, username);
     room.players.set(player.id, player);
     return room.toJSON();
 };
 
-const leaveRoom = (roomCode, playerId)=>{
+const leaveRoom = (playerId, roomCode)=>{
     const room = rooms.get(roomCode);
-    if(!room) return null;
+    if(!room) return { deleted: true }; // Assume deleted if not found
 
-    room.players.delete(playerId);
+    const player = room.players.get(playerId);
+    if(player){
+        if(!room.departedPlayers) room.departedPlayers = new Set();
+        room.departedPlayers.add(player.username);
+        room.players.delete(playerId);
+    }
 
-    if(room.players.size === 0){
+    // Delete room if completely empty, if the host leaves, or if a playing game drops to 1 player
+    if(room.players.size === 0 || room.hostId === playerId){
         rooms.delete(roomCode);
-        return null;
+        return { deleted: true };
+    }
+    
+    if (room.status === "playing" && room.players.size <= 1) {
+        rooms.delete(roomCode);
+        return { deleted: true };
     }
 
-    if(room.hostID===playerId){
-        const newHost = room.players.values().next().value;
-        newHost.isHost=true;
-        room.hostId=newHost.id;
-    }
-
-    return room.toJSON();
+    return { deleted: false, room: room.toJSON() };
 };
 
 const getRoom = (roomCode)=>{
-    room=rooms.get(roomCode)
-    return room;
+    const room = rooms.get(roomCode);
+    return room || null;
 }
 
 module.exports = {createRoom, joinRoom, leaveRoom, getRoom}

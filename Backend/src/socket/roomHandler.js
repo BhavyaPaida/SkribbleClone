@@ -1,4 +1,4 @@
-const {createRoom, joinRoom} = require('../services/roomService');
+const {createRoom, joinRoom, leaveRoom} = require('../services/roomService');
 
 const {registerGameHandler} = require('./gameHandler');
 const {registerDrawHandler} = require('./drawHandler');
@@ -6,6 +6,12 @@ const {registerChatHandler} = require('./chatHandler');
 
 
 const roomHandler = (io, socket) =>{
+
+      registerGameHandler(io, socket);
+      registerDrawHandler(io, socket);
+      registerChatHandler(io, socket);
+
+
     socket.on('createRoom', ({username, maxPlayers})=>{
         try {
             const room = createRoom(socket.id, username, maxPlayers);
@@ -23,9 +29,6 @@ const roomHandler = (io, socket) =>{
 
             //registering a handle means simply calling socket.on()
 
-            registerGameHandler(io, socket);
-            registerDrawHandler(io, socket);
-            registerChatHandler(io, socket);
 
         }
         catch(err){
@@ -41,11 +44,8 @@ const roomHandler = (io, socket) =>{
             socket.username = username;
             socket.join(roomCode);
 
-            io.to(roomCode).emit(` ${username} joined`, room)
+            io.to(roomCode).emit(`${username} joined`, room)
 
-            registerGameHandler(io, socket);
-            registerDrawHandler(io, socket);
-            registerChatHandler(io, socket);
             
         }
         catch(err){
@@ -56,26 +56,36 @@ const roomHandler = (io, socket) =>{
 
     socket.on("leaveRoom", ()=>{
         const {roomCode, username} = socket;
-        const updatedRoom = leaveRoom(socket.id, roomCode);
+        const result = leaveRoom(socket.id, roomCode);
 
         socket.leave(roomCode);
 
-        if(!updatedRoom){return;}
+        if(!result) return;
 
-        io.to(roomCode).emit(`${username} left`, {
-            username,
-            room: updatedRoom});
+        if (result.deleted) {
+            io.to(roomCode).emit('roomClosed');
+        } else {
+            io.to(roomCode).emit(`${username} left`, {
+                username,
+                room: result.room
+            });
+        }
     });
 
     socket.on("disconnect", ()=>{
         if(!socket.roomCode) return;
 
-        const updatedRoom = leaveRoom(socket.id, socket.roomCode);
-        if(!updatedRoom) return;
-        io.to(socket.roomCode).emit(`${socket.username} left`, {
-            username: socket.username,
-            room: updatedRoom,
-        });
+        const result = leaveRoom(socket.id, socket.roomCode);
+        if(!result) return;
+        
+        if (result.deleted) {
+            io.to(socket.roomCode).emit('roomClosed');
+        } else {
+            io.to(socket.roomCode).emit(`${socket.username} left`, {
+                username: socket.username,
+                room: result.room,
+            });
+        }
     });
 
 };

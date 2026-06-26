@@ -31,14 +31,17 @@ class GameService{
 
     assignNextDrawer() {
         const players = Array.from(this.room.players.values());
+        if (players.length === 0) return null; // Abort if no players left
+
         const currentIndex = players.findIndex(p => p.id === this.room.currentDrawerId);
-        const nextIndex = (currentIndex + 1) % players.length;
+        const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % players.length;
 
         if (nextIndex == 0){
             this.room.currentRound +=1;
         }
 
         this._setUpTurn(players[nextIndex].id);
+        this.room.status = "playing"; // Resume playing status
         return this._getTurnData();
     }
 
@@ -120,3 +123,4 @@ class GameService{
 
     
 }
+module.exports = GameService;

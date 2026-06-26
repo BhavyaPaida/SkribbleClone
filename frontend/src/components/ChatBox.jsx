@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import socket from '../socket/socket';
 
-export default function ChatBox({ roomCode, isPlaying = false, initialMessages = [] }) {
+export default function ChatBox({ roomCode, isPlaying = false, isDrawer = false, initialMessages = [] }) {
   // Seed state directly from initialMessages prop — runs only once on mount
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState('');
@@ -25,13 +25,11 @@ export default function ChatBox({ roomCode, isPlaying = false, initialMessages =
     };
 
     socket.on('chat-message', handleChat);
-    socket.on('chat message', handleChat);
     socket.on('correctGuess', handleCorrectGuess);
     window.addEventListener('chat_log', handleLog);
 
     return () => {
       socket.off('chat-message', handleChat);
-      socket.off('chat message', handleChat);
       socket.off('correctGuess', handleCorrectGuess);
       window.removeEventListener('chat_log', handleLog);
     };
@@ -42,11 +40,11 @@ export default function ChatBox({ roomCode, isPlaying = false, initialMessages =
   }, [messages]);
 
   const sendMessage = () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isDrawer) return;
     if (isPlaying) {
       socket.emit('guess-word', { guess: input.trim() });
     } else {
-      socket.emit('chat message', { message: input.trim() });
+      socket.emit('chat-message', { message: input.trim() });
     }
     setInput('');
   };
@@ -120,7 +118,8 @@ export default function ChatBox({ roomCode, isPlaying = false, initialMessages =
       }}>
         <input
           type="text"
-          placeholder={isPlaying ? 'Type your guess...' : 'Type a message...'}
+          disabled={isDrawer}
+          placeholder={isDrawer ? 'You are drawing!' : (isPlaying ? 'Type your guess...' : 'Type a message...')}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
@@ -130,7 +129,8 @@ export default function ChatBox({ roomCode, isPlaying = false, initialMessages =
             padding: '9px 14px',
             borderRadius: '10px',
             border: '1px solid #e5e7eb',
-            background: '#f9fafb',
+            background: isDrawer ? '#f3f4f6' : '#f9fafb',
+            cursor: isDrawer ? 'not-allowed' : 'text',
             outline: 'none',
             color: '#111',
           }}

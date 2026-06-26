@@ -80,6 +80,20 @@ export default function GamePage() {
 
     socket.on('error', (err) => console.error('[socket]', err.message));
 
+    const handleAny = (event, data) => {
+      if (event.includes('left') && data?.room) {
+        setRoom(data.room);
+        window.dispatchEvent(new CustomEvent('chat_log', {
+          detail: `${data.username} left the game.`,
+        }));
+      }
+      if (event === 'roomClosed') {
+        socket.disconnect();
+        navigate('/', { state: { error: 'The room was closed because the host left or not enough players remained.' } });
+      }
+    };
+    socket.onAny(handleAny);
+
     return () => {
       socket.off('your-word');
       socket.off('new-turn');
@@ -88,6 +102,7 @@ export default function GamePage() {
       socket.off('game-over');
       socket.off('correctGuess');
       socket.off('error');
+      socket.offAny(handleAny);
     };
   }, []);
 
@@ -105,6 +120,13 @@ export default function GamePage() {
       window.dispatchEvent(new CustomEvent('chat_log', { detail: 'Round 1 has started!' }));
     }
   }, []);
+
+  // Request word if we missed the initial broadcast
+  useEffect(() => {
+    if (isDrawer && !myWord) {
+      socket.emit('request-word');
+    }
+  }, [isDrawer, myWord]);
 
   const handleWordRevealDone = () => setShowWordReveal(false);
 
@@ -202,7 +224,7 @@ export default function GamePage() {
         <Canvas isDrawer={isDrawer} roomCode={roomCode} />
 
         {/* Chat */}
-        <ChatBox roomCode={roomCode} isPlaying={true} />
+        <ChatBox roomCode={roomCode} isPlaying={true} isDrawer={isDrawer} />
       </main>
     </div>
   );

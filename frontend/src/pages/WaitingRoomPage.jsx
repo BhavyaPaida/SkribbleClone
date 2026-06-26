@@ -97,6 +97,9 @@ export default function WaitingRoomPage() {
           detail: `${data.username} left the room.`,
         }));
       }
+      if (event === 'roomClosed') {
+        navigate('/', { state: { error: 'The room was closed because the host left or not enough players remained.' } });
+      }
     });
 
     socket.on('gameStarted', handleGameStarted);

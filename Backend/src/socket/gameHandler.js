@@ -12,7 +12,7 @@ const registerGameHandler = (io,socket) => {
         try{
             const data= room.gameService.startGame(socket.id);
             io.to(socket.roomCode).emit("gameStarted", data.room);
-            io.to(data.drawerId).emit("Your word", {word: data.word});
+            io.to(data.drawerId).emit("your-word", {word: data.word});
 
             startRoundTimer(io, socket.roomCode, room);
         }
@@ -21,12 +21,19 @@ const registerGameHandler = (io,socket) => {
         }
     })
 
+    socket.on("request-word", () => {
+        const room = getRoom(socket.roomCode);
+        if(!room || room.status !== "playing") return;
+
+        if (socket.id === room.currentDrawerId && room.currentWord) {
+             socket.emit("your-word", { word: room.currentWord });
+        }
+    });
 
     socket.on("guess-word", ({guess}) => {
         const room= getRoom(socket.roomCode);
         if(!room || room.status !== "playing") return;
 
-        
         const normalizedGuess = guess.trim().toLowerCase();
         const normalizedWord = room.currentWord.trim().toLowerCase();
 
@@ -65,11 +72,16 @@ const registerGameHandler = (io,socket) => {
     };
 
     const endRound = (io, roomCode, room) => {
-
         if (room.timer) {
             clearTimeout(room.timer);
             room.timer = null;
         }
+
+        room.status = "waiting"; // Prevent old drawer from requesting word
+
+        room.players.forEach(p => {
+            p.hasGuessed = false;
+        });
 
   
         io.to(roomCode).emit("clearCanvas");
@@ -89,6 +101,7 @@ const registerGameHandler = (io,socket) => {
             
             else {
                 const data = room.gameService.assignNextDrawer();
+                if (!data) return; // Abort if game can't continue (e.g. no players)
                 io.to(roomCode).emit("new-turn", data.room);
                 io.to(data.drawerId).emit("your-word", { word: data.word });
                 startRoundTimer(io, roomCode, room);

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import socket from '../socket/socket';
 
 // 8 SVG stick figures matching the screenshot exactly
@@ -156,11 +156,20 @@ function StickyWrapper({ selected, onClick, children }) {
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [username, setUsername] = useState('');
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [roomCode, setRoomCode] = useState('');
   const [error, setError] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState(0);
+
+  useEffect(() => {
+    if (location.state?.error) {
+      setError(location.state.error);
+      // Clear the state so refreshing doesn't keep showing the error
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleCreateRoom = () => {
     if (!username.trim()) { setError('Please enter a username first.'); return; }
